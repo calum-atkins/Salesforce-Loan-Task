@@ -1,6 +1,8 @@
 public with sharing class LoanTriggerHandler {
     public static Boolean ignoreTrigger = false;
+    private static final String SOBJECT_NAME = 'Loan__c';
 
+    // Wrapper class for trigger values
     private class TriggerWrapper {
         private List<Loan__c> oldList;
         private List<Loan__c> newList;
@@ -16,7 +18,9 @@ public with sharing class LoanTriggerHandler {
     }
 
     public void run() {
-        if (ignoreTrigger) {
+
+        //Ignore trigger
+        if (ignoreTrigger || !TriggerUtil.shouldTriggerRun(SOBJECT_NAME)) {
             return;
         }
 

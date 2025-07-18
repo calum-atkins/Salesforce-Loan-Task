@@ -1,7 +1,6 @@
 public with sharing class LoanTriggerHandler {
     public static Boolean ignoreTrigger = false;
 
-    // Wrapper class for trigger values
     private class TriggerWrapper {
         private List<Loan__c> oldList;
         private List<Loan__c> newList;
@@ -17,8 +16,6 @@ public with sharing class LoanTriggerHandler {
     }
 
     public void run() {
-
-        //Ignore trigger
         if (ignoreTrigger) {
             return;
         }
@@ -31,7 +28,6 @@ public with sharing class LoanTriggerHandler {
 
     }
 
-    
     private void handleAfterInsert(TriggerWrapper triggerWrapper) {
 
     }

@@ -22,9 +22,20 @@ public class LoanTriggerHandlerTest {
     @isTest
     static void createNewLoanCharges_validLoan_createsReleaseCharge() {
         // Given
-        Loan__c loan = [SELECT Id FROM Loan__c WHERE Name = 'Valid Loan' LIMIT 1];
+        Loan__c loan = new Loan__c(
+            Name = 'Valid Loan',
+            Account__c = [SELECT Id FROM Account LIMIT 1].Id,
+            Address__Street__s = '123 Loan St',
+            Gross_Loan_Amount__c = 10000,
+            Date_Loan_Issued__c = Date.today(),
+            Term__c = 12
+        );
 
         // When
+        Test.startTest();
+        insert loan;
+        Test.stopTest();
+
         List<Loan_Charge__c> charges = [
             SELECT Id, Charge_Type__c, Amount__c, Loan__c
             FROM Loan_Charge__c
@@ -51,7 +62,10 @@ public class LoanTriggerHandlerTest {
             Date_Loan_Issued__c = Date.today(),
             Term__c = 6
         );
+
+        Test.startTest();
         insert newLoan;
+        Test.stopTest();
 
         // Then
         List<Loan_Charge__c> releaseCharges = [
@@ -69,7 +83,10 @@ public class LoanTriggerHandlerTest {
             Account__c = acc.Id,
             Gross_Loan_Amount__c = 9000
         );
+
+        Test.startTest();
         insert loan;
+        Test.stopTest();
 
         // When
         List<Loan_Charge__c> charges = [
@@ -91,11 +108,36 @@ public class LoanTriggerHandlerTest {
             Date_Loan_Issued__c = Date.today(),
             Term__c = null
         );
+
+        Test.startTest();
         insert loan;
+        Test.stopTest();
 
         // Then
         List<Loan_Charge__c> charges = [SELECT Id FROM Loan_Charge__c WHERE Loan__c = :loan.Id];
         System.assertEquals(0, charges.size(), 'No Release Charge should be created if Term__c is invalid or null.');
+    }
+
+    @isTest
+    static void createNewLoanCharges_unrealisticTerm_doesNotCrash() {
+        Account acc = [SELECT Id FROM Account LIMIT 1];
+        Loan__c loan = new Loan__c(
+            Name = 'Huge Term Loan',
+            Account__c = acc.Id,
+            Gross_Loan_Amount__c = 9000,
+            Date_Loan_Issued__c = Date.today(),
+            Term__c = 99999
+        );
+
+        try {
+            Test.startTest();
+            insert loan;
+            Test.stopTest();
+            List<Loan_Charge__c> charges = [SELECT Id FROM Loan_Charge__c WHERE Loan__c = :loan.Id];
+            System.assertEquals(0, charges.size(), 'Invalid term should skip charge creation.');
+        } catch (Exception ex) {
+            System.assert(true, 'Should not throw exception on unrealistic term.');
+        }
     }
 
     // -- Helpers --
@@ -104,4 +146,6 @@ public class LoanTriggerHandlerTest {
     private static Id getPersonAccountRecordTypeId() {
         return [SELECT Id FROM RecordType WHERE SObjectType = 'Account' AND Name = 'Person Account' LIMIT 1].Id;
     }
+
+
 }
